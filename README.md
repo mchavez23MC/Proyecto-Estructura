@@ -14,6 +14,22 @@ Proyecto Java independiente para ejercicios de estructuras de datos y una simula
 
 Los paquetes de la lista anterior están dentro de `src/main/java/org/example/proyectoestructura/`.
 
+## Contexto de clase y consigna
+
+[Resumen-videos.md](Resumen-videos.md) reúne el contexto de los cuatro videos de clase. La consigna de seleccionar pasajeros, repartirlos y atenderlos corresponde al mismo algoritmo; está implementada en `SimulacionAeropuerto`.
+
+| Paso de la consigna | Implementación |
+|---|---|
+| Elegir una cantidad aleatoria `np`. | `distribuirPasajeros()` calcula el lote y controla el caso de uno o dos pasajeros. |
+| Sacar `np` pasajeros de `LPasajeros`. | Se extraen de la cabeza de la lista `pendientes`. |
+| Colocarlos en mostradores por rotación. | Se agregan al final de las filas de `mostradores`, reiniciando cada lote en el primero. |
+| Elegir el mostrador `nm`. | `atenderPasajero()` elige aleatoriamente entre los mostradores ocupados. |
+| Atender al pasajero sacándolo de `LP`. | Se extrae al primero de la fila interna del mostrador elegido. |
+
+En el vocabulario de clase, `LP` es la lista de procesos que contiene los mostradores; atender elimina un pasajero de una fila interna, sin eliminar el mostrador. La versión básica permite elegir un mostrador vacío y controla la extracción `null`. El proyecto aplica la mejora recomendada en los videos: seleccionar solamente mostradores ocupados.
+
+El ejemplo `EjercicioMostradores.java` compartido en la conversación ilustra la versión básica; no está incorporado al repositorio. La aplicación se ejecuta mediante `Main` y utiliza la simulación modularizada.
+
 ## Compilar y ejecutar
 
 Desde la raíz, con Maven:

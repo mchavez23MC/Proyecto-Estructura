@@ -2,37 +2,43 @@
 
 ## Project Structure & Module Organization
 
-This standalone Java 21 project demonstrates data structures using passengers and luggage. Sources live under `src/main/java/org/example/proyectoestructura/`:
+This Java 21 airport project keeps sources under `src/main/java/org/example/proyectoestructura/`:
 
-- `Main.java`: sample data, comparators, queries, and console output.
-- `estructura/ListaArreglo.java`: generic, fixed-capacity array list.
-- `modelo/`: passenger (`Pasajero`) and luggage (`Maleta`) models.
+- `Main.java`: original luggage queries, sample data, and simulation startup.
+- `estructura/`: fixed-capacity `ListaArreglo`, simple `ListaEnlazada`/`NodoLista`, and generic `ListaProcesos`/`NodoProceso` with independent internal lists.
+- `modelo/`: `Pasajero` and `Maleta`, linked by `idPasajero`.
+- `simulacion/`: `SimulacionAeropuerto`, which distributes and serves passengers.
 
-`pom.xml` defines the Maven project and UTF-8 encoding. `README.md` documents execution and current behavior. There are no test sources or application assets. Keep generated classes and packaged output in `target/`.
+Executable tests live under `src/test/java`. Keep generated output in `target/`. `README.md` describes usage; `Resumen-videos.md` records the classroom context. Subsequent luggage processing remains pending.
 
 ## Build, Test, and Development Commands
 
-Use JDK 21 or newer. Run commands from the repository root:
+Use JDK 21+, UTF-8, and the repository root. Maven is optional; no external libraries are required.
 
-- `mvn package`: compile and package the project; also runs tests when configured.
-- `java -cp target/classes org.example.proyectoestructura.Main`: run the console example after compilation.
-- `mvn test`: invoke Maven's test phase; currently there are no automated tests.
+- `mvn package`: compile sources and package the application.
+- `java -cp target/classes org.example.proyectoestructura.Main 42`: run queries and simulation with a reproducible seed; omit `42` for random runs.
 
-Maven is optional. Compile directly with:
+Without Maven, compile sources, then compile and run the standalone tests:
 
 ```bash
-mkdir -p target/classes
+mkdir -p target/classes target/test-classes
 javac -encoding UTF-8 --release 21 -d target/classes $(find src/main/java -name '*.java')
+javac -encoding UTF-8 --release 21 -cp target/classes -d target/test-classes $(find src/test/java -name '*.java')
+java -cp target/classes:target/test-classes org.example.proyectoestructura.PruebasAeropuerto
 ```
+
+`mvn test` alone does not execute `PruebasAeropuerto`; no testing framework or coverage threshold is configured.
 
 ## Coding Style & Naming Conventions
 
-Use four-space indentation, opening braces on the declaration line, and UTF-8 source files. Use `PascalCase` for classes, `camelCase` for methods and fields, and lowercase package names. Follow existing Spanish domain names such as `idPasajero` and `buscarMayores`. Keep model classes in `modelo` and reusable collections in `estructura`. No formatter or linter is configured; keep edits consistent with surrounding code.
+Use four spaces, opening braces on declaration lines, `PascalCase` classes, `camelCase` members, and lowercase packages. Preserve Spanish domain names. Keep collections in `estructura`, models in `modelo`, and simulation behavior in `simulacion`. No formatter or linter is configured.
 
-## Testing Guidelines
+## Simulation & Testing Guidelines
 
-No testing framework or coverage threshold is configured. For changes, compile and run `Main`; the sample should select luggage `M011` and passengers `P001` and `P002`. When introducing automated tests, place them under `src/test/java` with matching packages and names such as `ListaArregloTest`, and configure the framework in `pom.xml`. Cover empty lists, capacity limits, index bounds, insertion/removal order, and comparator filtering.
+Preserve three independent FIFO queues. Each batch restarts distribution at counter 1. Move all remaining passengers when there are one or two; otherwise choose between 1 and half the remaining count, inclusive. Serve one randomly selected occupied counter after distribution. Finish only when the source and all queues are empty.
+
+Extend the standalone tests for behavior changes: empty lists, index bounds, rotation, FIFO, unique service, and passenger conservation. Existing tests include 120 seeded simulations. Original queries should still select `M011`, `P001`, and `P002`. Derive luggage counts from luggage records. Document deliberate changes to `ListaArreglo` capacity behavior.
 
 ## Commit & Pull Request Guidelines
 
-This checkout has no Git metadata, so historical commit conventions cannot be verified. Use concise, imperative messages such as `Fix passenger luggage counting`. Keep changes focused. Pull requests should explain the behavior change, list validation commands and results, and link related issues when available. Include console output for query changes. Document intentional changes to fixed-capacity behavior, including the current silent rejection of insertions when full.
+No Git metadata is available to verify historical conventions. Use imperative messages such as `Fix passenger distribution`. Describe behavior changes, related issues, validation commands and results; include console output for simulation changes.
