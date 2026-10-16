@@ -16,7 +16,9 @@ import org.example.proyectoestructura.simulacion.SimulacionAeropuerto;
 public class PruebasAeropuerto {
     public static void main(String[] args) {
         probarLista();
+        probarListaDoble();
         probarProcesos();
+        probarCircular();
         probarRepartoYOrden();
         probarRangoAleatorio();
         probarSimulaciones();
@@ -42,6 +44,43 @@ public class PruebasAeropuerto {
         comprobar(lista.getPrimero().getValor() == 30 && lista.getSize() == 1,
                 "Reutilización después de vaciar");
         comprobar(lista.toString().equals("[30]"), "Impresión de lista");
+    }
+
+    private static void probarListaDoble() {
+        ListaEnlazada<Integer> lista = new ListaEnlazada<>();
+        comprobar(lista.eliminarUltimo() == null, "Extracción final vacía segura");
+        lista.agregarUltimo(20);
+        lista.agregarUltimo(30);
+        lista.agregarPrimero(10);
+        comprobar(lista.toString().equals("[10, 20, 30]"), "Recorrido hacia adelante");
+        comprobar(lista.toStringInverso().equals("[30, 20, 10]"), "Recorrido hacia atrás");
+        comprobar(lista.getPrimero().getAnt() == null && lista.getUltimo().getSig() == null,
+                "Extremos sin enlaces externos");
+        comprobar(lista.getPrimero().getSig().getAnt() == lista.getPrimero(), "Enlace anterior");
+        NodoLista<Integer> retirado = lista.eliminarUltimo();
+        comprobar(retirado.getValor() == 30 && retirado.getAnt() == null, "Extracción del último");
+        comprobar(lista.getUltimo().getValor() == 20 && lista.getUltimo().getSig() == null,
+                "Nuevo último");
+        retirado = lista.eliminarPrimero();
+        comprobar(retirado.getValor() == 10 && lista.getPrimero().getAnt() == null, "Nuevo primero");
+        lista.eliminarUltimo();
+        comprobar(lista.estaVacio() && lista.getUltimo() == null, "Lista vacía desde el final");
+    }
+
+    private static void probarCircular() {
+        ListaProcesos<String, Integer> procesos = new ListaProcesos<>();
+        procesos.agregarUltimo("M1");
+        comprobar(procesos.getPrimero().getSig() == procesos.getPrimero(), "Un proceso apunta a sí mismo");
+        procesos.agregarUltimo("M2");
+        procesos.agregarUltimo("M3");
+        comprobar(procesos.getUltimo().getSig() == procesos.getPrimero(), "El último vuelve al primero");
+        NodoProceso<String, Integer> nodo = procesos.getPrimero();
+        for (int i = 0; i < 7; i++) {
+            nodo = nodo.getSig();
+        }
+        comprobar(nodo.getValor().equals("M2"), "Rotación continua sin null");
+        comprobar(procesos.toString().equals("M1: []" + System.lineSeparator() + "M2: []"
+                + System.lineSeparator() + "M3: []"), "Impresión de una sola vuelta");
     }
 
     private static void probarProcesos() {
@@ -153,8 +192,8 @@ public class PruebasAeropuerto {
                     for (NodoLista<Pasajero> nodo = origen.getPrimero(); nodo != null; nodo = nodo.getSig()) {
                         comprobar(presentes.add(nodo.getValor().getId()), "Origen sin duplicados");
                     }
-                    for (NodoProceso<String, Pasajero> mostrador = simulacion.getMostradores().getPrimero();
-                         mostrador != null; mostrador = mostrador.getSig()) {
+                    for (int i = 0; i < simulacion.getMostradores().getSize(); i++) {
+                        NodoProceso<String, Pasajero> mostrador = simulacion.getMostradores().getNodoXId(i);
                         for (NodoLista<Pasajero> nodo = mostrador.getLista().getPrimero();
                              nodo != null; nodo = nodo.getSig()) {
                             comprobar(presentes.add(nodo.getValor().getId()), "Filas sin duplicados");

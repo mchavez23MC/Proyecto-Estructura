@@ -5,7 +5,7 @@
 This Java 21 airport project keeps sources under `src/main/java/org/example/proyectoestructura/`:
 
 - `Main.java`: original luggage queries, sample data, and simulation startup.
-- `estructura/`: fixed-capacity `ListaArreglo`, simple `ListaEnlazada`/`NodoLista`, and generic `ListaProcesos`/`NodoProceso` with independent internal lists.
+- `estructura/`: fixed-capacity `ListaArreglo`, doubly linked `ListaEnlazada`/`NodoLista`, and generic circular `ListaProcesos`/`NodoProceso` with independent internal lists.
 - `modelo/`: `Pasajero` and `Maleta`, linked by `idPasajero`.
 - `simulacion/`: `SimulacionAeropuerto`, which distributes and serves passengers.
 
@@ -37,7 +37,7 @@ Use four spaces, opening braces on declaration lines, `PascalCase` classes, `cam
 
 Preserve three independent FIFO queues. Each batch restarts distribution at counter 1. Move all remaining passengers when there are one or two; otherwise choose between 1 and half the remaining count, inclusive. Serve one randomly selected occupied counter after distribution. Finish only when the source and all queues are empty.
 
-Extend the standalone tests for behavior changes: empty lists, index bounds, rotation, FIFO, unique service, and passenger conservation. Existing tests include 120 seeded simulations. Original queries should still select `M011`, `P001`, and `P002`. Derive luggage counts from luggage records. Document deliberate changes to `ListaArreglo` capacity behavior.
+Extend the standalone tests for behavior changes: empty lists, previous links, circular traversal, index bounds, rotation, FIFO, unique service, and passenger conservation. Existing tests include 120 seeded simulations. Original queries should still select `M011`, `P001`, and `P002`. Derive luggage counts from luggage records. Document deliberate changes to `ListaArreglo` capacity behavior.
 
 ## Commit & Pull Request Guidelines
 

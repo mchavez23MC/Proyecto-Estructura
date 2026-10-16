@@ -5,7 +5,11 @@ public class NodoProceso<E, F> {
     private final ListaEnlazada<F> lista = new ListaEnlazada<>();
     private NodoProceso<E, F> sig;
 
-    public NodoProceso(E valor) { this.valor = valor; }
+    public NodoProceso(E valor) {
+        this.valor = valor;
+        this.sig = this;
+    }
+
     public E getValor() { return valor; }
     public ListaEnlazada<F> getLista() { return lista; }
     public NodoProceso<E, F> getSig() { return sig; }

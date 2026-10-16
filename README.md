@@ -6,8 +6,8 @@ Proyecto Java independiente para ejercicios de estructuras de datos y una simula
 
 - `src/main/java/org/example/proyectoestructura/Main.java`: consultas originales, datos de ejemplo e inicio de la simulación.
 - `estructura/ListaArreglo.java`: lista de capacidad fija usada por las consultas originales.
-- `estructura/NodoLista.java` y `ListaEnlazada.java`: lista enlazada simple para las filas de pasajeros.
-- `estructura/NodoProceso.java` y `ListaProcesos.java`: lista enlazada de procesos, cada uno con su propia lista enlazada interna.
+- `estructura/NodoLista.java` y `ListaEnlazada.java`: lista doblemente enlazada para las filas de pasajeros.
+- `estructura/NodoProceso.java` y `ListaProcesos.java`: lista circular de procesos, cada uno con su propia lista enlazada interna.
 - `modelo/`: `Pasajero` y `Maleta`, vinculados mediante `Maleta.idPasajero`.
 - `simulacion/SimulacionAeropuerto.java`: reparto y atención de pasajeros.
 - `src/test/java/`: pruebas ejecutables sin dependencias externas.
@@ -66,9 +66,11 @@ Después se simula el check-in con doce pasajeros y tres mostradores:
 3. Se elige aleatoriamente, con igual probabilidad, uno de los mostradores ocupados y se atiende al primero de su fila. Esta es la mejora recomendada para evitar turnos vacíos.
 4. Se continúa hasta vaciar tanto el origen como todas las filas, mostrando las asignaciones, las atenciones y el estado de los mostradores.
 
-`ListaProcesos.getNodoXId(pos)` usa posiciones desde cero y rechaza posiciones inválidas. `ListaEnlazada.eliminarPrimero()` devuelve el nodo retirado, desconectado, o `null` si está vacía. Los mostradores permanecen creados al terminar: `estanVaciasLA()` comprueba sus filas, no la existencia de mostradores.
+`ListaEnlazada` es doblemente enlazada: cada `NodoLista` conoce su siguiente (`getSig()`) y su anterior (`getAnt()`). Permite agregar y eliminar por ambos extremos (`agregarPrimero`, `agregarUltimo`, `eliminarPrimero`, `eliminarUltimo`) y recorrerla al revés con `toStringInverso()`. `eliminarPrimero()` y `eliminarUltimo()` devuelven el nodo retirado, desconectado, o `null` si está vacía.
 
-Los datos siguen definidos en código, sin persistencia. El procesamiento posterior de equipaje queda pendiente de la segunda parte de clase. `ListaArreglo` conserva su capacidad fija y descarta inserciones al llenarse; las nuevas listas enlazadas no tienen ese límite.
+`ListaProcesos` es circular: el último mostrador apunta al primero y un único `NodoProceso` apunta a sí mismo. Por eso la rotación del reparto avanza siempre con `getSig()` sin volver manualmente al primero, y los recorridos completos terminan al regresar a `getPrimero()`. `getNodoXId(pos)` usa posiciones desde cero y rechaza posiciones inválidas. Los mostradores permanecen creados al terminar: `estanVaciasLA()` comprueba sus filas, no la existencia de mostradores.
+
+Los datos siguen definidos en código, sin persistencia. El procesamiento posterior de equipaje queda pendiente de la segunda parte de clase. `ListaArreglo` conserva su capacidad fija y descarta inserciones al llenarse; las listas enlazadas no tienen ese límite.
 
 ## Pruebas
 
@@ -80,4 +82,4 @@ javac -encoding UTF-8 --release 21 -cp target/classes -d target/test-classes $(f
 java -cp target/classes:target/test-classes org.example.proyectoestructura.PruebasAeropuerto
 ```
 
-Las pruebas lanzan `AssertionError` ante un fallo. Verifican listas vacías y reutilización, posiciones inválidas, filas independientes, rotación, atención FIFO, límites de lotes y conservación de pasajeros. También prueban 120 simulaciones con diferentes tamaños y semillas para comprobar atención única y finalización. No hay framework de pruebas configurado: `mvn test` por sí solo no ejecuta este programa de pruebas.
+Las pruebas lanzan `AssertionError` ante un fallo. Verifican listas vacías y reutilización, enlaces dobles y recorrido inverso, circularidad de los mostradores, posiciones inválidas, filas independientes, rotación, atención FIFO, límites de lotes y conservación de pasajeros. También prueban 120 simulaciones con diferentes tamaños y semillas para comprobar atención única y finalización. No hay framework de pruebas configurado: `mvn test` por sí solo no ejecuta este programa de pruebas.

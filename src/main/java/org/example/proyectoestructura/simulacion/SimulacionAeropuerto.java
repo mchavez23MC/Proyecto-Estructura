@@ -64,35 +64,36 @@ public class SimulacionAeropuerto {
             mostrador.getLista().agregarUltimo(pasajero);
             salida.println("Asignado " + pasajero.getId() + " a " + mostrador.getValor());
             mostrador = mostrador.getSig();
-            if (mostrador == null) {
-                mostrador = mostradores.getPrimero();
-            }
         }
+    }
+
+    private int contarOcupados() {
+        int ocupados = 0;
+        NodoProceso<String, Pasajero> nodo = mostradores.getPrimero();
+        for (int i = 0; i < mostradores.getSize(); i++) {
+            if (!nodo.getLista().estaVacio()) {
+                ocupados++;
+            }
+            nodo = nodo.getSig();
+        }
+        return ocupados;
     }
 
     private void atenderPasajero() {
         // Elegir uniformemente entre filas ocupadas evita desperdiciar turnos.
-        int ocupados = 0;
-        for (NodoProceso<String, Pasajero> nodo = mostradores.getPrimero();
-             nodo != null; nodo = nodo.getSig()) {
-            if (!nodo.getLista().estaVacio()) {
-                ocupados++;
-            }
-        }
+        int ocupados = contarOcupados();
         if (ocupados == 0) {
             return;
         }
         int elegido = aleatorio.nextInt(ocupados);
-        for (NodoProceso<String, Pasajero> nodo = mostradores.getPrimero();
-             nodo != null; nodo = nodo.getSig()) {
-            if (!nodo.getLista().estaVacio() && elegido-- == 0) {
-                NodoLista<Pasajero> atendido = nodo.getLista().eliminarPrimero();
-                if (atendido != null) {
-                    salida.println("Atendido " + atendido.getValor().getId()
-                            + " en " + nodo.getValor());
-                }
-                return;
-            }
+        NodoProceso<String, Pasajero> nodo = mostradores.getPrimero();
+        while (nodo.getLista().estaVacio() || elegido-- > 0) {
+            nodo = nodo.getSig();
+        }
+        NodoLista<Pasajero> atendido = nodo.getLista().eliminarPrimero();
+        if (atendido != null) {
+            salida.println("Atendido " + atendido.getValor().getId()
+                    + " en " + nodo.getValor());
         }
     }
 
