@@ -19,23 +19,21 @@ public class Main {
         pasajeros.addLast(new Pasajero("P003", "Lucia", "Vega", "EC987654"));
 
         ListaArreglo<Maleta> maletas = new ListaArreglo<>(10);
-        maletas.addLast(new Maleta("M001", 18.5, "P001"));
-        maletas.addLast(new Maleta("M002", 7.2, "P001"));
-        maletas.addLast(new Maleta("M003", 22.0, "P002"));
-        maletas.addLast(new Maleta("M004", 12.8, "P003"));
-        maletas.addLast(new Maleta("M011", 9.0, "P002"));
+        maletas.addLast(new Maleta("M001", 18.5, "P001", "AV101"));
+        maletas.addLast(new Maleta("M002", 7.2, "P001", "AV101"));
+        maletas.addLast(new Maleta("M003", 22.0, "P002", "LA202"));
+        maletas.addLast(new Maleta("M004", 12.8, "P003", "CM303"));
+        maletas.addLast(new Maleta("M011", 9.0, "P002", "LA202"));
 
         Comparator<Maleta> porCodigo = Comparator.comparingInt(maleta -> extraerNumero(maleta.getId()));
         System.out.println("Maletas con código mayor a 10:");
-        System.out.println(maletas.buscarMayores(new Maleta("M010", 0.0, ""), porCodigo));
+        System.out.println(maletas.buscarMayores(new Maleta("M010", 0.0, "", ""), porCodigo));
 
         Comparator<Pasajero> porCantidadDeMaletas = Comparator.comparingInt(
                 pasajero -> contarMaletas(maletas, pasajero.getId()));
-        // P003 tiene una maleta y sirve como referencia para filtrar pasajeros con más de una.
         System.out.println("Pasajeros con más de una maleta:");
         System.out.println(pasajeros.buscarMayores(new Pasajero("P003", "", "", ""), porCantidadDeMaletas));
 
-        // La cantidad de maletas se sigue calculando desde la relación idPasajero.
         ListaEnlazada<Pasajero> pendientes = new ListaEnlazada<>();
         for (int i = 0; i < pasajeros.size(); i++) {
             pendientes.agregarUltimo(pasajeros.get(i));
@@ -44,7 +42,19 @@ public class Main {
             pendientes.agregarUltimo(new Pasajero("P%03d".formatted(i),
                     "Pasajero " + i, "Ejemplo", "EC%06d".formatted(i)));
         }
-        new SimulacionAeropuerto(pendientes, aleatorio, System.out).ejecutar();
+
+        ListaEnlazada<Maleta> lMaletas = new ListaEnlazada<>();
+        for (int i = 0; i < maletas.size(); i++) {
+            lMaletas.agregarUltimo(maletas.get(i));
+        }
+        lMaletas.agregarUltimo(new Maleta("M005", 15.0, "P004", "AV101"));
+        lMaletas.agregarUltimo(new Maleta("M006", 20.3, "P005", "CM303"));
+        lMaletas.agregarUltimo(new Maleta("M007", 8.4, "P005", "CM303"));
+        lMaletas.agregarUltimo(new Maleta("M008", 11.6, "P007", "LA202"));
+        lMaletas.agregarUltimo(new Maleta("M009", 17.9, "P009", "AV101"));
+        lMaletas.agregarUltimo(new Maleta("M010", 23.1, "P012", "CM303"));
+
+        new SimulacionAeropuerto(pendientes, lMaletas, aleatorio, System.out).ejecutar();
     }
 
     private static int extraerNumero(String codigo) {

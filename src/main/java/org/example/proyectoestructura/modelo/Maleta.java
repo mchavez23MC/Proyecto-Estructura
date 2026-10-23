@@ -4,11 +4,21 @@ public class Maleta {
     private String id;
     private Double peso;
     private String idPasajero;
+    private String vuelo;
 
-    public Maleta(String id, Double peso,  String idPasajero) {
+    public Maleta(String id, Double peso, String idPasajero, String vuelo) {
         this.id = id;
         this.peso = peso;
         this.idPasajero = idPasajero;
+        this.vuelo = vuelo;
+    }
+
+    public String getVuelo() {
+        return vuelo;
+    }
+
+    public void setVuelo(String vuelo) {
+        this.vuelo = vuelo;
     }
 
     public String getIdPasajero() {
@@ -41,6 +51,7 @@ public class Maleta {
                 "id='" + id + '\'' +
                 ", peso=" + peso +
                 ", idPasajero='" + idPasajero + '\'' +
+                ", vuelo='" + vuelo + '\'' +
                 '}';
     }
 }

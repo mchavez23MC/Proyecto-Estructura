@@ -48,7 +48,20 @@ public class ListaProcesos<E, F> {
         return true;
     }
 
-    // Acceso por posición desde cero, no por el valor identificador del proceso.
+    public NodoProceso<E, F> buscar(E valor) {
+        if (estaVacio()) {
+            return null;
+        }
+        NodoProceso<E, F> nodo = primero;
+        do {
+            if (nodo.getValor().equals(valor)) {
+                return nodo;
+            }
+            nodo = nodo.getSig();
+        } while (nodo != primero);
+        return null;
+    }
+
     public NodoProceso<E, F> getNodoXId(int pos) {
         if (pos < 0 || pos >= getSize()) {
             throw new IndexOutOfBoundsException("Posición fuera de rango: " + pos);

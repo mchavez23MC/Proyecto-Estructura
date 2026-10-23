@@ -40,7 +40,6 @@ public class ListaEnlazada<E> {
         ultimo = nuevo;
     }
 
-    // Devuelve null si no hay elementos; el nodo retirado queda desconectado.
     public NodoLista<E> eliminarPrimero() {
         NodoLista<E> retirado = primero;
         if (retirado != null) {
@@ -67,6 +66,23 @@ public class ListaEnlazada<E> {
             }
         }
         return retirado;
+    }
+
+    public NodoLista<E> eliminarNodo(NodoLista<E> nodo) {
+        if (nodo == null || estaVacio()) {
+            return null;
+        }
+        if (nodo == primero) {
+            return eliminarPrimero();
+        }
+        if (nodo == ultimo) {
+            return eliminarUltimo();
+        }
+        nodo.getAnt().setSig(nodo.getSig());
+        nodo.getSig().setAnt(nodo.getAnt());
+        nodo.setSig(null);
+        nodo.setAnt(null);
+        return nodo;
     }
 
     public String toStringInverso() {
