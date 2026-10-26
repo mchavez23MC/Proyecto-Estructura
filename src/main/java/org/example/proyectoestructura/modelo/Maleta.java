@@ -47,11 +47,6 @@ public class Maleta {
 
     @Override
     public String toString() {
-        return "Maleta{" +
-                "id='" + id + '\'' +
-                ", peso=" + peso +
-                ", idPasajero='" + idPasajero + '\'' +
-                ", vuelo='" + vuelo + '\'' +
-                '}';
+        return id;
     }
 }

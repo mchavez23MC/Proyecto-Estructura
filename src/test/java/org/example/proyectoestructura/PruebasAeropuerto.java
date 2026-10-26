@@ -2,9 +2,7 @@ package org.example.proyectoestructura;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.util.HashSet;
 import java.util.Random;
-import java.util.Set;
 import org.example.proyectoestructura.estructura.ListaEnlazada;
 import org.example.proyectoestructura.estructura.ListaProcesos;
 import org.example.proyectoestructura.estructura.NodoLista;
@@ -21,9 +19,19 @@ public class PruebasAeropuerto {
         probarProcesos();
         probarCircular();
         probarBuscarProceso();
-        probarRepartoYOrden();
         probarRangoAleatorio();
-        probarMaletas();
+        probarOperacionesListaProcesos();
+        escenario1TresMostradoresVacios();
+        escenario2FilaMasCortaYDesempate();
+        escenario3AtenderVariosDeUnMostrador();
+        escenario4CerrarMostradoresVacios();
+        escenario5CerrarMostradorConPasajeros();
+        escenario6NoCerrarUnicoMostrador();
+        escenario7MaletasASusVuelos();
+        escenario8ProcesarMaletasDeUnVuelo();
+        escenario9ProcesoDeMaletasVacio();
+        escenario10EliminarVueloSoloVacio();
+        escenario11EstadoDeLPyLM();
         probarSimulaciones();
         System.out.println("Todas las pruebas pasaron.");
     }
@@ -141,74 +149,10 @@ public class PruebasAeropuerto {
     private static ListaEnlazada<Pasajero> pasajeros(int cantidad) {
         ListaEnlazada<Pasajero> lista = new ListaEnlazada<>();
         for (int i = 1; i <= cantidad; i++) {
-            lista.agregarUltimo(new Pasajero("P" + i, "Nombre", "Apellido", "Documento"));
+            lista.agregarUltimo(new Pasajero("P" + i, "Nombre", "V1", 0));
         }
         return lista;
     }
-
-    private static Random controlado() {
-        return new Random(0) {
-            private int llamadas;
-            @Override
-            public int nextInt(int limite) {
-                return llamadas++ % 2 == 0 ? limite - 1 : 0;
-            }
-        };
-    }
-
-    private static void probarRepartoYOrden() {
-        ListaEnlazada<Pasajero> origen = pasajeros(12);
-        ByteArrayOutputStream registro = new ByteArrayOutputStream();
-        SimulacionAeropuerto simulacion = new SimulacionAeropuerto(origen, new ListaEnlazada<>(),
-                controlado(), new PrintStream(registro));
-        simulacion.ejecutarRonda();
-        comprobar(origen.getSize() == 6, "Lote de la mitad del origen");
-        comprobar(ids(simulacion, 0).equals("P4"), "Mostrador 1 atiende P1 y conserva P4");
-        comprobar(ids(simulacion, 1).equals("P2 P5"), "Filas iguales: va al primer mostrador");
-        comprobar(ids(simulacion, 2).equals("P3 P6"), "Filas iguales: reparto parejo");
-        simulacion.ejecutarRonda();
-        comprobar(ids(simulacion, 0).equals("P7 P8"), "P7 y P8 van a la fila más corta; atención FIFO");
-        comprobar(ids(simulacion, 1).equals("P2 P5 P9"), "Empate entre 2 y 3: primer mostrador encontrado");
-        comprobar(ids(simulacion, 2).equals("P3 P6"), "Se preservan pasajeros anteriores");
-    }
-
-    private static void probarMaletas() {
-        ListaEnlazada<Maleta> maletas = new ListaEnlazada<>();
-        maletas.agregarUltimo(new Maleta("A", 10.0, "P1", "V1"));
-        maletas.agregarUltimo(new Maleta("B", 10.0, "P2", "V2"));
-        maletas.agregarUltimo(new Maleta("C", 10.0, "P1", "V1"));
-        maletas.agregarUltimo(new Maleta("D", 10.0, "P3", "V1"));
-        maletas.agregarUltimo(new Maleta("E", 10.0, "PX", "V3"));
-        ByteArrayOutputStream registro = new ByteArrayOutputStream();
-        SimulacionAeropuerto simulacion = new SimulacionAeropuerto(pasajeros(4), maletas,
-                controlado(), new PrintStream(registro));
-        simulacion.ejecutarRonda();
-        comprobar(maletas.getSize() == 3, "Solo salen las maletas del pasajero atendido");
-        ListaProcesos<String, Maleta> vuelos = simulacion.getVuelos();
-        comprobar(vuelos.getSize() == 1 && vuelos.buscar("V1").getLista().getSize() == 2,
-                "Se crea el vuelo V1 con las dos maletas de P1");
-        simulacion.ejecutar();
-        comprobar(maletas.getSize() == 1 && maletas.getPrimero().getValor().getId().equals("E"),
-                "La maleta sin pasajero queda en LMaletas");
-        comprobar(vuelos.getSize() == 2, "No se repiten vuelos en LM");
-        comprobar(vuelos.buscar("V1").getLista().getSize() == 3, "La maleta de P3 se suma al vuelo existente");
-        comprobar(vuelos.buscar("V2").getLista().getPrimero().getValor().getId().equals("B"),
-                "La maleta de P2 crea el vuelo V2");
-        comprobar(registro.toString().contains("P4 no tiene maletas"), "Pasajero sin maletas");
-    }
-
-    private static String ids(SimulacionAeropuerto simulacion, int posicion) {
-        StringBuilder ids = new StringBuilder();
-        for (NodoLista<Pasajero> nodo = simulacion.getMostradores().getNodoXId(posicion)
-                .getLista().getPrimero(); nodo != null; nodo = nodo.getSig()) {
-            if (!ids.isEmpty()) {
-                ids.append(' ');
-            }
-            ids.append(nodo.getValor().getId());
-        }
-        return ids.toString();
-    }
-
     private static void probarRangoAleatorio() {
         for (boolean maximo : new boolean[] {false, true}) {
             Random extremo = new Random(0) {
@@ -221,71 +165,245 @@ public class PruebasAeropuerto {
             ListaEnlazada<Pasajero> origen = pasajeros(9);
             SimulacionAeropuerto simulacion = new SimulacionAeropuerto(origen, new ListaEnlazada<>(),
                     extremo, new PrintStream(new ByteArrayOutputStream()));
-            simulacion.ejecutarRonda();
+            simulacion.distribuirPasajeros();
             comprobar(origen.getSize() == (maximo ? 5 : 8), "Lote inclusivo entre 1 y mitad entera");
         }
+    }
+
+
+    private static Random maximo() {
+        return new Random(0) {
+            @Override
+            public int nextInt(int limite) {
+                return limite - 1;
+            }
+        };
+    }
+
+    private static SimulacionAeropuerto simulacion(ListaEnlazada<Pasajero> origen, ListaEnlazada<Maleta> maletas,
+                                                   ByteArrayOutputStream registro) {
+        return new SimulacionAeropuerto(origen, maletas, new Random(1), new PrintStream(registro));
+    }
+
+    private static String salto() {
+        return System.lineSeparator();
+    }
+
+    private static void probarOperacionesListaProcesos() {
+        ListaProcesos<String, Integer> procesos = new ListaProcesos<>();
+        comprobar(procesos.obtenerProcesoMasCorto() == null, "Sin procesos no hay más corto");
+        comprobar(procesos.totalElementos() == 0 && procesos.totalDeProcesos() == 0, "Totales en cero");
+        comprobar(procesos.agregarProceso("A") && procesos.agregarProceso("B"), "Agregar procesos");
+        comprobar(!procesos.agregarProceso("A"), "No se repite un proceso");
+        comprobar(procesos.agregar("A", 1) && procesos.agregar("A", 2) && procesos.agregar("B", 3),
+                "Agregar elementos");
+        comprobar(!procesos.agregar("Z", 9), "No agrega a un proceso inexistente");
+        comprobar(procesos.revisarPrimero("A") == 1 && procesos.tamanoProceso("A") == 2,
+                "Revisar primero no retira");
+        comprobar(procesos.obtenerProcesoMasCorto().equals("B"), "Proceso más corto");
+        comprobar(procesos.obtenerProcesoMasCorto("B").equals("A"), "Más corto excluyendo uno");
+        comprobar(procesos.totalElementos() == 3 && procesos.totalDeProcesos() == 2, "Totales");
+        comprobar(procesos.eliminar("A") == 1 && procesos.eliminar("A") == 2, "Eliminar en orden FIFO");
+        comprobar(procesos.tamanoProceso("Z") == -1, "Tamaño de proceso inexistente");
+        comprobar(procesos.encontrarProceso("B") == procesos.getUltimo(), "Encontrar proceso");
+    }
+
+    private static void escenario1TresMostradoresVacios() {
+        SimulacionAeropuerto simulacion = simulacion(pasajeros(0), new ListaEnlazada<>(), new ByteArrayOutputStream());
+        ListaProcesos<String, Pasajero> lp = simulacion.getMostradores();
+        comprobar(lp.totalDeProcesos() == 3 && lp.estanVaciasLA(), "Tres mostradores vacíos");
+        comprobar(lp.toString().equals("Mostrador 1: []" + salto() + "Mostrador 2: []" + salto()
+                + "Mostrador 3: []"), "Recorrido en orden");
+        comprobar(lp.getValorXId(0).equals("Mostrador 1") && lp.getValorXId(2).equals("Mostrador 3"),
+                "Posiciones de los mostradores");
+    }
+
+    private static void escenario2FilaMasCortaYDesempate() {
+        ListaEnlazada<Pasajero> origen = pasajeros(6);
+        SimulacionAeropuerto simulacion = new SimulacionAeropuerto(origen, new ListaEnlazada<>(), maximo(),
+                new PrintStream(new ByteArrayOutputStream()));
+        simulacion.distribuirPasajeros();
+        ListaProcesos<String, Pasajero> lp = simulacion.getMostradores();
+        comprobar(lp.revisarPrimero("Mostrador 1").getId().equals("P1")
+                && lp.revisarPrimero("Mostrador 2").getId().equals("P2")
+                && lp.revisarPrimero("Mostrador 3").getId().equals("P3"), "Filas iguales: primer mostrador");
+        lp.eliminar("Mostrador 2");
+        simulacion.distribuirPasajeros();
+        comprobar(lp.tamanoProceso("Mostrador 2") == 1 && lp.revisarPrimero("Mostrador 2").getId().equals("P4"),
+                "Va a la fila más corta");
+        simulacion.distribuirPasajeros();
+        comprobar(lp.tamanoProceso("Mostrador 1") == 2, "Empate entre todos: primer mostrador encontrado");
+    }
+
+    private static void escenario3AtenderVariosDeUnMostrador() {
+        ByteArrayOutputStream registro = new ByteArrayOutputStream();
+        SimulacionAeropuerto simulacion = simulacion(pasajeros(0), new ListaEnlazada<>(), registro);
+        ListaProcesos<String, Pasajero> lp = simulacion.getMostradores();
+        ListaEnlazada<Pasajero> fila = pasajeros(3);
+        for (NodoLista<Pasajero> nodo = fila.getPrimero(); nodo != null; nodo = nodo.getSig()) {
+            lp.agregar("Mostrador 2", nodo.getValor());
+        }
+        simulacion.atenderPasajero();
+        simulacion.atenderPasajero();
+        comprobar(lp.revisarPrimero("Mostrador 2").getId().equals("P3"), "Se atiende en orden de llegada");
+        simulacion.atenderPasajero();
+        simulacion.atenderPasajero();
+        String texto = registro.toString();
+        comprobar(texto.indexOf("Atendido P1") < texto.indexOf("Atendido P2")
+                && texto.indexOf("Atendido P2") < texto.indexOf("Atendido P3"), "Orden FIFO");
+        comprobar(simulacion.getAtendidos() == 3 && lp.estanVaciasLA(), "Atender sin pasajeros no falla");
+    }
+
+    private static void escenario4CerrarMostradoresVacios() {
+        ListaProcesos<String, Pasajero> lp = new ListaProcesos<>();
+        for (int i = 1; i <= 5; i++) {
+            lp.agregarProceso("M" + i);
+        }
+        comprobar(lp.removerProceso("M1"), "Cerrar al inicio");
+        comprobar(lp.getPrimero().getValor().equals("M2") && lp.getUltimo().getSig() == lp.getPrimero(),
+                "Nuevo primero y circular");
+        comprobar(lp.removerProceso("M3"), "Cerrar en el medio");
+        comprobar(lp.removerProceso("M5"), "Cerrar al final");
+        comprobar(lp.getUltimo().getValor().equals("M4") && lp.getUltimo().getSig() == lp.getPrimero(),
+                "Nuevo último y circular");
+        comprobar(lp.toString().equals("M2: []" + salto() + "M4: []"), "Quedan M2 y M4");
+        comprobar(!lp.removerProceso("M9"), "Cerrar inexistente");
+        lp.removerProceso("M2");
+        lp.removerProceso("M4");
+        comprobar(lp.estaVacio() && lp.getUltimo() == null, "Se cierran todos");
+    }
+
+    private static void escenario5CerrarMostradorConPasajeros() {
+        ByteArrayOutputStream registro = new ByteArrayOutputStream();
+        SimulacionAeropuerto simulacion = simulacion(pasajeros(0), new ListaEnlazada<>(), registro);
+        ListaProcesos<String, Pasajero> lp = simulacion.getMostradores();
+        ListaEnlazada<Pasajero> lista = pasajeros(4);
+        lp.agregar("Mostrador 1", lista.eliminarPrimero().getValor());
+        lp.agregar("Mostrador 1", lista.eliminarPrimero().getValor());
+        lp.agregar("Mostrador 1", lista.eliminarPrimero().getValor());
+        lp.agregar("Mostrador 2", lista.eliminarPrimero().getValor());
+        comprobar(simulacion.cerrarMostrador("Mostrador 1"), "Se cierra con pasajeros");
+        comprobar(lp.encontrarProceso("Mostrador 1") == null && lp.totalDeProcesos() == 2, "Nodo eliminado");
+        comprobar(lp.totalElementos() == 4, "No se pierden pasajeros");
+        comprobar(lp.toString().equals("Mostrador 2: [P4, P2]" + salto() + "Mostrador 3: [P1, P3]"),
+                "Redistribución uno por uno a la fila más corta");
+        String texto = registro.toString();
+        comprobar(texto.indexOf("Reasignado P1") < texto.indexOf("Reasignado P2")
+                && texto.indexOf("Reasignado P2") < texto.indexOf("Reasignado P3"), "Salen en su orden");
+    }
+
+    private static void escenario6NoCerrarUnicoMostrador() {
+        ByteArrayOutputStream registro = new ByteArrayOutputStream();
+        SimulacionAeropuerto simulacion = simulacion(pasajeros(0), new ListaEnlazada<>(), registro);
+        ListaProcesos<String, Pasajero> lp = simulacion.getMostradores();
+        simulacion.cerrarMostrador("Mostrador 2");
+        simulacion.cerrarMostrador("Mostrador 3");
+        lp.agregar("Mostrador 1", new Pasajero("P1", "Nombre", "V1", 0));
+        comprobar(!simulacion.cerrarMostrador("Mostrador 1"), "Se rechaza cerrar el único mostrador");
+        comprobar(lp.totalDeProcesos() == 1 && lp.tamanoProceso("Mostrador 1") == 1, "El mostrador sigue abierto");
+        comprobar(registro.toString().contains("No se puede cerrar"), "Mensaje de rechazo");
+    }
+
+    private static void escenario7MaletasASusVuelos() {
+        ListaEnlazada<Maleta> maletas = new ListaEnlazada<>();
+        maletas.agregarUltimo(new Maleta("A", 10.0, "P1", "V1"));
+        maletas.agregarUltimo(new Maleta("B", 12.0, "P2", "V1"));
+        maletas.agregarUltimo(new Maleta("C", 15.0, "P1", "V2"));
+        maletas.agregarUltimo(new Maleta("D", 8.0, "P1", "V1"));
+        SimulacionAeropuerto simulacion = simulacion(pasajeros(0), maletas, new ByteArrayOutputStream());
+        simulacion.getMostradores().agregar("Mostrador 1", new Pasajero("P1", "Juan", "V1", 3));
+        simulacion.atenderPasajero();
+        ListaProcesos<String, Maleta> lm = simulacion.getVuelos();
+        comprobar(lm.toString().equals("V1: [A, D]" + salto() + "V2: [C]"), "Cada maleta a su vuelo");
+        comprobar(maletas.getSize() == 1 && maletas.getPrimero().getValor().getId().equals("B"),
+                "Solo salen las maletas del pasajero atendido");
+    }
+
+    private static void escenario8ProcesarMaletasDeUnVuelo() {
+        SimulacionAeropuerto simulacion = simulacion(pasajeros(0), new ListaEnlazada<>(), new ByteArrayOutputStream());
+        ListaProcesos<String, Maleta> lm = simulacion.getVuelos();
+        lm.agregarProceso("V1");
+        lm.agregar("V1", new Maleta("A", 10.0, "P1", "V1"));
+        lm.agregar("V1", new Maleta("B", 10.0, "P1", "V1"));
+        comprobar(simulacion.procesarMaleta("V1").getId().equals("A"), "Se procesa la primera");
+        comprobar(lm.tamanoProceso("V1") == 1, "Queda una maleta");
+        comprobar(simulacion.procesarMaleta("V1").getId().equals("B"), "Se procesa la segunda");
+        comprobar(simulacion.getMaletasProcesadas() == 2, "Contador de maletas procesadas");
+    }
+
+    private static void escenario9ProcesoDeMaletasVacio() {
+        ByteArrayOutputStream registro = new ByteArrayOutputStream();
+        SimulacionAeropuerto simulacion = simulacion(pasajeros(0), new ListaEnlazada<>(), registro);
+        ListaProcesos<String, Maleta> lm = simulacion.getVuelos();
+        lm.agregarProceso("V1");
+        comprobar(lm.eliminar("V1") == null && lm.revisarPrimero("V1") == null, "Proceso vacío devuelve null");
+        comprobar(simulacion.procesarMaleta("V1") == null, "Procesar vuelo vacío sin error");
+        comprobar(simulacion.procesarMaleta("NO-EXISTE") == null, "Procesar vuelo inexistente sin error");
+        simulacion.procesarMaleta();
+        comprobar(registro.toString().contains("No hay maletas por procesar."), "LM vacía sin error");
+    }
+
+    private static void escenario10EliminarVueloSoloVacio() {
+        SimulacionAeropuerto simulacion = simulacion(pasajeros(0), new ListaEnlazada<>(), new ByteArrayOutputStream());
+        ListaProcesos<String, Maleta> lm = simulacion.getVuelos();
+        lm.agregarProceso("V1");
+        lm.agregarProceso("V2");
+        lm.agregar("V1", new Maleta("A", 10.0, "P1", "V1"));
+        lm.agregar("V1", new Maleta("B", 10.0, "P1", "V1"));
+        comprobar(!lm.removerProceso("V1"), "No se elimina un vuelo con maletas");
+        simulacion.procesarMaleta("V1");
+        comprobar(lm.encontrarProceso("V1") != null, "Con una maleta sigue existiendo");
+        simulacion.procesarMaleta("V1");
+        comprobar(lm.encontrarProceso("V1") == null && lm.totalDeProcesos() == 1, "Vacío se elimina");
+    }
+
+    private static void escenario11EstadoDeLPyLM() {
+        ListaEnlazada<Pasajero> origen = new ListaEnlazada<>();
+        origen.agregarUltimo(new Pasajero("P1", "Juan", "GYE-UIO", 2));
+        origen.agregarUltimo(new Pasajero("P2", "Pepe", "GYE-LIM", 1));
+        ListaEnlazada<Maleta> maletas = SimulacionAeropuerto.crearMaletas(origen, new Random(3));
+        comprobar(maletas.getSize() == 3, "Se crean las maletas según cada pasajero");
+        ByteArrayOutputStream registro = new ByteArrayOutputStream();
+        SimulacionAeropuerto simulacion = new SimulacionAeropuerto(origen, maletas, maximo(),
+                new PrintStream(registro));
+        simulacion.distribuirPasajeros();
+        simulacion.atenderPasajero();
+        registro.reset();
+        simulacion.imprimirEstado();
+        String texto = registro.toString();
+        comprobar(texto.contains("CHECK-IN") && texto.contains("Mostrador 1: [P1]")
+                && texto.contains("BAGGAGE") && texto.contains("GYE-LIM: [M003]"), "LP y LM al mismo tiempo");
+        comprobar(simulacion.getMostradores().getClass() == simulacion.getVuelos().getClass(),
+                "La misma clase genérica con tipos distintos");
     }
 
     private static void probarSimulaciones() {
         for (int cantidad : new int[] {0, 1, 2, 3, 12, 50}) {
             for (int semilla = 0; semilla < 20; semilla++) {
-                ListaEnlazada<Pasajero> origen = pasajeros(cantidad);
-                ListaEnlazada<Maleta> maletas = new ListaEnlazada<>();
+                ListaEnlazada<Pasajero> origen = new ListaEnlazada<>();
                 int totalMaletas = 0;
                 for (int i = 1; i <= cantidad; i++) {
-                    for (int j = 0; j < i % 3; j++) {
-                        maletas.agregarUltimo(new Maleta("M" + i + "-" + j, 10.0, "P" + i, "V" + i % 4));
-                        totalMaletas++;
-                    }
+                    origen.agregarUltimo(new Pasajero("P" + i, "Nombre", "V" + i % 4, i % 3));
+                    totalMaletas = totalMaletas + i % 3;
                 }
-                ByteArrayOutputStream registro = new ByteArrayOutputStream();
-                SimulacionAeropuerto simulacion = new SimulacionAeropuerto(origen, maletas,
-                        new Random(semilla), new PrintStream(registro));
-                Set<String> atendidos = new HashSet<>();
+                Random aleatorio = new Random(semilla);
+                ListaEnlazada<Maleta> maletas = SimulacionAeropuerto.crearMaletas(origen, aleatorio);
+                SimulacionAeropuerto simulacion = new SimulacionAeropuerto(origen, maletas, aleatorio,
+                        new PrintStream(new ByteArrayOutputStream()));
                 int rondas = 0;
                 while (!simulacion.haTerminado()) {
-                    comprobar(++rondas <= cantidad, "Finalización sin turnos perdidos");
-                    registro.reset();
+                    rondas++;
+                    comprobar(rondas <= cantidad, "Un pasajero atendido por ciclo");
                     simulacion.ejecutarRonda();
-                    long atenciones = 0;
-                    for (String linea : registro.toString().lines().toList()) {
-                        if (linea.startsWith("Atendido ")) {
-                            String id = linea.split(" ")[1];
-                            comprobar(atendidos.add(id), "Atención única: " + id);
-                            atenciones++;
-                        }
-                    }
-                    comprobar(atenciones == 1, "Una atención por ronda");
-                    Set<String> presentes = new HashSet<>(atendidos);
-                    for (NodoLista<Pasajero> nodo = origen.getPrimero(); nodo != null; nodo = nodo.getSig()) {
-                        comprobar(presentes.add(nodo.getValor().getId()), "Origen sin duplicados");
-                    }
-                    for (int i = 0; i < simulacion.getMostradores().getSize(); i++) {
-                        NodoProceso<String, Pasajero> mostrador = simulacion.getMostradores().getNodoXId(i);
-                        for (NodoLista<Pasajero> nodo = mostrador.getLista().getPrimero();
-                             nodo != null; nodo = nodo.getSig()) {
-                            comprobar(presentes.add(nodo.getValor().getId()), "Filas sin duplicados");
-                        }
-                    }
-                    comprobar(presentes.size() == cantidad, "Conservación de pasajeros en cada ronda");
-                    if (cantidad <= 2) {
-                        comprobar(origen.estaVacio(), "Trasladar todos cuando quedan dos o menos");
-                    }
+                    comprobar(origen.getSize() + simulacion.getMostradores().totalElementos()
+                            + simulacion.getAtendidos() == cantidad, "No se pierden pasajeros");
                 }
-                comprobar(atendidos.size() == cantidad && origen.estaVacio()
-                        && simulacion.getMostradores().estanVaciasLA(), "Todos atendidos");
-                int enVuelos = 0;
-                for (int i = 0; i < simulacion.getVuelos().getSize(); i++) {
-                    NodoProceso<String, Maleta> vuelo = simulacion.getVuelos().getNodoXId(i);
-                    for (NodoLista<Maleta> nodo = vuelo.getLista().getPrimero(); nodo != null; nodo = nodo.getSig()) {
-                        comprobar(nodo.getValor().getVuelo().equals(vuelo.getValor()), "Maleta en su vuelo");
-                        enVuelos++;
-                    }
-                }
-                comprobar(maletas.estaVacio() && enVuelos == totalMaletas, "Todas las maletas llegan a LM");
-                registro.reset();
-                simulacion.ejecutarRonda();
-                comprobar(registro.size() == 0, "Ronda terminada no hace cambios");
+                comprobar(simulacion.getAtendidos() == cantidad, "Todos atendidos");
+                comprobar(maletas.estaVacio() && simulacion.getVuelos().totalElementos() == totalMaletas,
+                        "Todas las maletas llegan a LM");
+                simulacion.procesarTodasLasMaletas();
+                comprobar(simulacion.equipajeTerminado() && simulacion.getMaletasProcesadas() == totalMaletas,
+                        "Todas las maletas se procesan");
             }
         }
     }

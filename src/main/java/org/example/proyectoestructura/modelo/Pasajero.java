@@ -3,14 +3,14 @@ package org.example.proyectoestructura.modelo;
 public class Pasajero {
     private String id;
     private String nombre;
-    private String apellido;
-    private String pasaporte;
+    private String vuelo;
+    private int cantidadMaletas;
 
-    public Pasajero(String id, String nombre, String apellido, String pasaporte) {
+    public Pasajero(String id, String nombre, String vuelo, int cantidadMaletas) {
         this.id = id;
         this.nombre = nombre;
-        this.apellido = apellido;
-        this.pasaporte = pasaporte;
+        this.vuelo = vuelo;
+        this.cantidadMaletas = cantidadMaletas;
     }
 
     public String getId() {
@@ -29,29 +29,24 @@ public class Pasajero {
         this.nombre = nombre;
     }
 
-    public String getApellido() {
-        return apellido;
+    public String getVuelo() {
+        return vuelo;
     }
 
-    public void setApellido(String apellido) {
-        this.apellido = apellido;
+    public void setVuelo(String vuelo) {
+        this.vuelo = vuelo;
     }
 
-    public String getPasaporte() {
-        return pasaporte;
+    public int getCantidadMaletas() {
+        return cantidadMaletas;
     }
 
-    public void setPasaporte(String pasaporte) {
-        this.pasaporte = pasaporte;
+    public void setCantidadMaletas(int cantidadMaletas) {
+        this.cantidadMaletas = cantidadMaletas;
     }
 
     @Override
     public String toString() {
-        return "Pasajero{" +
-                "id='" + id + '\'' +
-                ", nombre='" + nombre + '\'' +
-                ", apellido='" + apellido + '\'' +
-                ", pasaporte='" + pasaporte + '\'' +
-                '}';
+        return id;
     }
 }
